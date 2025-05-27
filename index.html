@@ -71,29 +71,6 @@
       .then(res => res.text())
       .then(res => alert("Đã ghi: " + res));
     }
-
-    // BẮT SỰ KIỆN QUÉT QR MỚI (NẾU MUỐN QUÉT QR KHÁC)
-    function onScanSuccess(decodedText, decodedResult) {
-      const [maTB, tenTB] = decodedText.split("|");
-      currentDevice = maTB;
-      currentName = tenTB;
-
-      document.getElementById("input-ma-thiet-bi").value = maTB;
-      document.getElementById("input-ten-thiet-bi").value = tenTB;
-
-      document.getElementById("thong-tin-thiet-bi").innerHTML = `
-        <strong>Thiết bị:</strong> ${tenTB}<br>
-        <strong>Mã:</strong> ${maTB}
-      `;
-    }
-
-    // KÍCH HOẠT CAMERA (QUÉT THÊM QR NẾU MUỐN)
-    const html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      onScanSuccess
-    );
   </script>
 
 </body>
