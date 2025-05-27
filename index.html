@@ -10,10 +10,9 @@
   </style>
 </head>
 <body>
-  <h2>Quét Thiết Bị</h2>
-  <div id="qr-reader" style="width:300px;margin:auto;"></div>
-
-  <p>Thiết bị: <span id="device-id">...</span></p>
+  <input type="text" id="input-ma-thiet-bi" name="ma_thiet_bi" hidden>
+  <input type="text" id="input-ten-thiet-bi" name="ten_thiet_bi" hidden>
+  <div id="thong-tin-thiet-bi"></div>
   <input type="text" id="user" placeholder="Tên người dùng"><br>
   <button onclick="submitData('mượn')">Mượn</button>
   <button onclick="submitData('trả')">Trả</button>
@@ -52,5 +51,25 @@
       onScanSuccess
     );
   </script>
+<script>
+  function getParameterByName(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+
+  const deviceInfo = getParameterByName("device");
+  if (deviceInfo) {
+    const [maTB, tenTB] = deviceInfo.split("|");
+    document.getElementById("input-ma-thiet-bi").value = maTB;
+    document.getElementById("input-ten-thiet-bi").value = tenTB;
+
+    // (Hiển thị nếu muốn)
+    document.getElementById("thong-tin-thiet-bi").innerHTML = `
+      <strong>Mã:</strong> ${maTB}<br>
+      <strong>Tên:</strong> ${tenTB}
+    `;
+  }
+</script>
+
 </body>
 </html>
