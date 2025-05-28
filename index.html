@@ -1,63 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mượn/Trả Thiết Bị</title>
+  <title>Mượn/Trả Thiết Bị (Có Phê Duyệt)</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     button { padding: 10px 20px; margin: 10px; font-size: 16px; }
     input { padding: 8px; margin-top: 10px; font-size: 16px; }
     #qr-reader { margin-top: 20px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-  <!-- THÔNG TIN THIẾT BỊ TỰ ĐỘNG ĐIỀN -->
-  <input type="text" id="input-ma-thiet-bi" name="ma_thiet_bi" hidden>
-  <input type="text" id="input-ten-thiet-bi" name="ten_thiet_bi" hidden>
+  <!-- THÔNG TIN THIẾT BỊ -->
+  <input type="text" id="input-ma-thiet-bi" hidden>
+  <input type="text" id="input-ten-thiet-bi" hidden>
   <div id="thong-tin-thiet-bi"></div>
 
-  <!-- NGƯỜI DÙNG NHẬP TÊN -->
+  <!-- NGƯỜI DÙNG -->
   <input type="text" id="user" placeholder="Tên người dùng"><br>
-  <button onclick="submitData('mượn')">Mượn</button>
-  <button onclick="submitData('trả')">Trả</button>
+  <button onclick="requestAction('mượn')">Yêu cầu Mượn</button>
+  <button onclick="requestAction('trả')">Yêu cầu Trả</button>
 
-  <!-- CAMERA QUÉT QR (NẾU MUỐN) -->
+  <!-- KHUNG PHÊ DUYỆT -->
+  <div id="phe-duyet-box" class="hidden">
+    <p><strong>Thủ kho xác nhận:</strong></p>
+    <input type="password" id="approval-code" placeholder="Mã phê duyệt"><br>
+    <button onclick="approveAction()">Phê duyệt & Gửi</button>
+  </div>
+
+  <!-- QR SCANNER -->
   <div id="qr-reader" style="width: 300px;"></div>
 
   <script>
-    let currentDevice = ""; // chứa mã TB
-    let currentName = "";   // chứa tên TB
+    let currentDevice = "";
+    let currentName = "";
+    let pendingAction = "";
 
-    // ĐỌC THAM SỐ TỪ URL
     function getParameterByName(name) {
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
 
-    // LẤY DEVICE TỪ URL (VD: ?device=TB001|Máy khoan Bosch)
     const deviceInfo = getParameterByName("device");
     if (deviceInfo) {
       const [maTB, tenTB] = deviceInfo.split("|");
       currentDevice = maTB;
       currentName = tenTB;
-
       document.getElementById("input-ma-thiet-bi").value = maTB;
       document.getElementById("input-ten-thiet-bi").value = tenTB;
-
       document.getElementById("thong-tin-thiet-bi").innerHTML = `
         <strong>Thiết bị:</strong> ${tenTB}<br>
         <strong>Mã:</strong> ${maTB}
       `;
     }
 
-    // GỬI DỮ LIỆU LÊN GOOGLE SHEET
-    function submitData(action) {
-      const user = document.getElementById('user').value;
-      if (!currentDevice || !user) {
-        alert("Thiếu mã thiết bị hoặc tên người dùng.");
+    function requestAction(action) {
+      const user = document.getElementById("user").value;
+      if (!user || !currentDevice) {
+        alert("Nhập tên người dùng và quét thiết bị.");
         return;
       }
+      pendingAction = action;
+      document.getElementById("phe-duyet-box").classList.remove("hidden");
+    }
+
+    function approveAction() {
+      const code = document.getElementById("approval-code").value.trim();
+      if (code !== "123456") {
+        alert("Mã phê duyệt không đúng.");
+        return;
+      }
+
+      const user = document.getElementById("user").value;
 
       fetch("https://script.google.com/macros/s/AKfycbzpul6wnwPyR2ukFegM2NB_Tx8JJOhbjkPq_QUsuM7PCwU5o1AYHdg-YRhJh4AV1nCvHg/exec", {
         method: "POST",
@@ -65,12 +81,36 @@
           device: currentDevice,
           name: currentName,
           user: user,
-          action: action
+          action: pendingAction,
+          approved: true
         })
       })
       .then(res => res.text())
-      .then(res => alert("Đã ghi: " + res));
+      .then(res => {
+        alert("Đã gửi lên hệ thống: " + res);
+        document.getElementById("phe-duyet-box").classList.add("hidden");
+        document.getElementById("approval-code").value = "";
+      });
     }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      const [maTB, tenTB] = decodedText.split("|");
+      currentDevice = maTB;
+      currentName = tenTB;
+      document.getElementById("input-ma-thiet-bi").value = maTB;
+      document.getElementById("input-ten-thiet-bi").value = tenTB;
+      document.getElementById("thong-tin-thiet-bi").innerHTML = `
+        <strong>Thiết bị:</strong> ${tenTB}<br>
+        <strong>Mã:</strong> ${maTB}
+      `;
+    }
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanSuccess
+    );
   </script>
 
 </body>
