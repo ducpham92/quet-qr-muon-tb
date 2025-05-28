@@ -2,12 +2,10 @@
 <html>
 <head>
   <title>Mượn/Trả Thiết Bị (Có Phê Duyệt)</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     button { padding: 10px 20px; margin: 10px; font-size: 16px; }
     input { padding: 8px; margin-top: 10px; font-size: 16px; }
-    #qr-reader { margin-top: 20px; }
     .hidden { display: none; }
   </style>
 </head>
@@ -30,9 +28,6 @@
     <button onclick="approveAction()">Phê duyệt & Gửi</button>
   </div>
 
-  <!-- QR SCANNER -->
-  <div id="qr-reader" style="width: 300px;"></div>
-
   <script>
     let currentDevice = "";
     let currentName = "";
@@ -43,6 +38,7 @@
       return url.searchParams.get(name);
     }
 
+    // Lấy thông tin thiết bị từ URL
     const deviceInfo = getParameterByName("device");
     if (deviceInfo) {
       const [maTB, tenTB] = deviceInfo.split("|");
@@ -59,7 +55,7 @@
     function requestAction(action) {
       const user = document.getElementById("user").value;
       if (!user || !currentDevice) {
-        alert("Nhập tên người dùng và quét thiết bị.");
+        alert("Nhập tên người dùng và đảm bảo có thông tin thiết bị.");
         return;
       }
       pendingAction = action;
@@ -92,25 +88,6 @@
         document.getElementById("approval-code").value = "";
       });
     }
-
-    function onScanSuccess(decodedText, decodedResult) {
-      const [maTB, tenTB] = decodedText.split("|");
-      currentDevice = maTB;
-      currentName = tenTB;
-      document.getElementById("input-ma-thiet-bi").value = maTB;
-      document.getElementById("input-ten-thiet-bi").value = tenTB;
-      document.getElementById("thong-tin-thiet-bi").innerHTML = `
-        <strong>Thiết bị:</strong> ${tenTB}<br>
-        <strong>Mã:</strong> ${maTB}
-      `;
-    }
-
-    const html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      onScanSuccess
-    );
   </script>
 
 </body>
