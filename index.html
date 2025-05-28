@@ -1,44 +1,33 @@
+<!-- HTML RÚT GỌN, GỬI YÊU CẦU KHÔNG CẦN PHÊ DUYỆT TRỰC TIẾP -->
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mượn/Trả Thiết Bị (Có Phê Duyệt)</title>
+  <title>Mượn/Trả Thiết Bị</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
     button { padding: 10px 20px; margin: 10px; font-size: 16px; }
     input { padding: 8px; margin-top: 10px; font-size: 16px; }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
 
-  <!-- THÔNG TIN THIẾT BỊ -->
   <input type="text" id="input-ma-thiet-bi" hidden>
   <input type="text" id="input-ten-thiet-bi" hidden>
   <div id="thong-tin-thiet-bi"></div>
 
-  <!-- NGƯỜI DÙNG -->
   <input type="text" id="user" placeholder="Tên người dùng"><br>
-  <button onclick="requestAction('mượn')">Yêu cầu Mượn</button>
-  <button onclick="requestAction('trả')">Yêu cầu Trả</button>
-
-  <!-- KHUNG PHÊ DUYỆT -->
-  <div id="phe-duyet-box" class="hidden">
-    <p><strong>Thủ kho xác nhận:</strong></p>
-    <input type="password" id="approval-code" placeholder="Mã phê duyệt"><br>
-    <button onclick="approveAction()">Phê duyệt & Gửi</button>
-  </div>
+  <button onclick="submitData('mượn')">Yêu cầu Mượn</button>
+  <button onclick="submitData('trả')">Yêu cầu Trả</button>
 
   <script>
     let currentDevice = "";
     let currentName = "";
-    let pendingAction = "";
 
     function getParameterByName(name) {
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
     }
 
-    // Lấy thông tin thiết bị từ URL
     const deviceInfo = getParameterByName("device");
     if (deviceInfo) {
       const [maTB, tenTB] = deviceInfo.split("|");
@@ -52,41 +41,24 @@
       `;
     }
 
-    function requestAction(action) {
+    function submitData(action) {
       const user = document.getElementById("user").value;
       if (!user || !currentDevice) {
-        alert("Nhập tên người dùng và đảm bảo có thông tin thiết bị.");
-        return;
-      }
-      pendingAction = action;
-      document.getElementById("phe-duyet-box").classList.remove("hidden");
-    }
-
-    function approveAction() {
-      const code = document.getElementById("approval-code").value.trim();
-      if (code !== "123456") {
-        alert("Mã phê duyệt không đúng.");
+        alert("Vui lòng nhập tên và có thông tin thiết bị.");
         return;
       }
 
-      const user = document.getElementById("user").value;
-
-      fetch("https://script.google.com/macros/s/AKfycbzpul6wnwPyR2ukFegM2NB_Tx8JJOhbjkPq_QUsuM7PCwU5o1AYHdg-YRhJh4AV1nCvHg/exec", {
+      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
         method: "POST",
         body: JSON.stringify({
           device: currentDevice,
           name: currentName,
           user: user,
-          action: pendingAction,
-          approved: true
+          action: action
         })
       })
       .then(res => res.text())
-      .then(res => {
-        alert("Đã gửi lên hệ thống: " + res);
-        document.getElementById("phe-duyet-box").classList.add("hidden");
-        document.getElementById("approval-code").value = "";
-      });
+      .then(res => alert("Đã gửi yêu cầu: " + res));
     }
   </script>
 
